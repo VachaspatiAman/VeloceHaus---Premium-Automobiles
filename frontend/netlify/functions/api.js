@@ -18,22 +18,22 @@
 'use strict';
 
 require('dotenv').config();
-const express      = require('express');
-const cors         = require('cors');
-const serverless   = require('serverless-http');
+const express = require('express');
+const cors = require('cors');
+const serverless = require('serverless-http');
 
 // ── Shared utilities ──────────────────────────────────────
-const AppError          = require('../../backend/utils/AppError');
-const globalErrorHandler = require('../../backend/middleware/errorMiddleware');
+const AppError = require('../../../backend/utils/AppError');
+const globalErrorHandler = require('../../../backend/middleware/errorMiddleware');
 
 // ── Route modules ─────────────────────────────────────────
-const authRoutes     = require('../../backend/routes/authRoutes');
-const vehicleRoutes  = require('../../backend/routes/vehicleRoutes');
-const adminRoutes    = require('../../backend/routes/adminRoutes');
-const wishlistRoutes = require('../../backend/routes/wishlistRoutes');
-const cartRoutes     = require('../../backend/routes/cartRoutes');
-const orderRoutes    = require('../../backend/routes/orderRoutes');
-const aiRoutes       = require('../../backend/routes/aiRoutes');
+const authRoutes = require('../../../backend/routes/authRoutes');
+const vehicleRoutes = require('../../../backend/routes/vehicleRoutes');
+const adminRoutes = require('../../../backend/routes/adminRoutes');
+const wishlistRoutes = require('../../../backend/routes/wishlistRoutes');
+const cartRoutes = require('../../../backend/routes/cartRoutes');
+const orderRoutes = require('../../../backend/routes/orderRoutes');
+const aiRoutes = require('../../../backend/routes/aiRoutes');
 
 // ── Express app ───────────────────────────────────────────
 const app = express();
@@ -71,21 +71,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ── Routes ────────────────────────────────────────────────
-app.use('/api/auth',     authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/admin',    adminRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/cart',     cartRoutes);
-app.use('/api/orders',   orderRoutes);
-app.use('/api/ai',       aiRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
-    status:  'success',
+    status: 'success',
     message: 'VeloceHaus API is live ✅',
-    env:     process.env.NODE_ENV || 'production',
-    ts:      new Date().toISOString(),
+    env: process.env.NODE_ENV || 'production',
+    ts: new Date().toISOString(),
   });
 });
 
