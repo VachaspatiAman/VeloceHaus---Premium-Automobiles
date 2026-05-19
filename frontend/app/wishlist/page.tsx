@@ -25,7 +25,7 @@ export default function WishlistPage() {
 
   const fetchWishlist = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/wishlist", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wishlist`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();
@@ -43,7 +43,7 @@ export default function WishlistPage() {
 
   const handleRemove = async (id: string) => {
     try {
-      await fetch(`http://localhost:5000/api/wishlist/remove/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wishlist/remove/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -55,7 +55,7 @@ export default function WishlistPage() {
 
   const handleAddToCart = async (id: string) => {
     try {
-      const res = await fetch("http://localhost:5000/api/cart/add", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

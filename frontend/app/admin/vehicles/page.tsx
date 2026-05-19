@@ -42,7 +42,7 @@ const emptyForm = (): Vehicle => ({
 
 const emptyColor = (): ColorVariant => ({ color_name: '', hex_code: '#ffffff', image_url: '' });
 
-const API = 'http://localhost:5000/api';
+const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function AdminVehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);

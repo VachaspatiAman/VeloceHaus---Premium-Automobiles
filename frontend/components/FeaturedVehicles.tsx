@@ -20,7 +20,7 @@ export default function FeaturedVehicles() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/vehicles/featured');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vehicles/featured`);
         const data = await res.json();
         if (data.status === 'success') {
           // Transform backend data to match VehicleCardProps format

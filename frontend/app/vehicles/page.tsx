@@ -209,7 +209,7 @@ function VehiclesContent() {
     const fetchVehicles = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch('http://localhost:5000/api/vehicles');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vehicles`);
         const data = await res.json();
         if (data.status === 'success') {
           // Transform backend data to match frontend format

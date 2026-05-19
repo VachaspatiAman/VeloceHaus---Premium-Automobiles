@@ -198,7 +198,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/vehicles/${params.id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vehicles/${params.id}`);
         const data = await res.json();
         if (data.status === 'success' && data.data.vehicle) {
           const v = data.data.vehicle;

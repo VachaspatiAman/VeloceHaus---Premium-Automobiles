@@ -27,7 +27,7 @@ export default function CartPage() {
 
   const fetchCart = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/cart", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();
@@ -46,7 +46,7 @@ export default function CartPage() {
   const handleUpdate = async (id: string, qty: number) => {
     if (qty < 1) return;
     try {
-      await fetch("http://localhost:5000/api/cart/update", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -62,7 +62,7 @@ export default function CartPage() {
 
   const handleRemove = async (id: string) => {
     try {
-      await fetch(`http://localhost:5000/api/cart/remove/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/remove/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -74,7 +74,7 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/orders/create", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/create`, {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });

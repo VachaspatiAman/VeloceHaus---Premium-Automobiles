@@ -33,7 +33,7 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/orders/myorders", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/myorders`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();

@@ -28,7 +28,7 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/orders', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/orders`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -46,7 +46,7 @@ export default function AdminOrders() {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/orders/${orderId}/status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export default function AdminOrders() {
     if (!confirm('Are you sure you want to delete this order?')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/orders/${orderId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/orders/${orderId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
