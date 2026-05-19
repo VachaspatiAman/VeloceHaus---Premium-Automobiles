@@ -6,7 +6,9 @@
   # Source of the frontend (Next.js)
   base    = "frontend"
   command = "npm install --prefix ../ && npm run build"
-  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -36,11 +38,7 @@
   to     = "/.netlify/functions/api/:splat"
   status = 200
 
-# 2. Catch-all SPA fallback: let Next.js handle every route
-[[redirects]]
-  from   = "/*"
-  to     = "/index.html"
-  status = 200
+# (Next.js plugin handles routing automatically)
 
 # ─── Headers ────────────────────────────────────────────────
 [[headers]]
