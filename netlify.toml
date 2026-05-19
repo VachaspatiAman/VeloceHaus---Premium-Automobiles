@@ -1,0 +1,58 @@
+# ============================================================
+#  Veloce – Netlify Configuration
+# ============================================================
+
+[build]
+  # Source of the frontend (Next.js)
+  base    = "frontend"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION  = "9"
+
+# ─── Netlify Functions ──────────────────────────────────────
+[functions]
+  # Functions live one level above the frontend
+  directory         = "../netlify/functions"
+  node_bundler      = "esbuild"
+  # Give each function a generous timeout (max 26 s on free tier)
+  included_files    = ["../netlify/functions/**"]
+
+# ─── Dev (netlify dev) ──────────────────────────────────────
+[dev]
+  command   = "npm run dev"
+  port      = 3000
+  targetPort = 3000
+  framework = "next"
+
+# ─── Redirects & Rewrites ───────────────────────────────────
+
+# 1. Proxy every /.netlify/functions/ call → Netlify Functions (already handled by Netlify)
+#    This block is kept for explicitness / local dev with netlify-cli.
+[[redirects]]
+  from   = "/api/*"
+  to     = "/.netlify/functions/api/:splat"
+  status = 200
+
+# 2. Catch-all SPA fallback: let Next.js handle every route
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# ─── Headers ────────────────────────────────────────────────
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin  = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
