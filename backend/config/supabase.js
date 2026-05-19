@@ -1,3 +1,4 @@
+const WebSocket = require('ws');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
@@ -10,9 +11,31 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 // Client for normal operations
-const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+const supabase = createClient(
+  supabaseUrl || '',
+  supabaseKey || '',
+  {
+    auth: {
+      persistSession: false
+    },
+    realtime: {
+      transport: WebSocket
+    }
+  }
+);
 
-// Admin client for operations requiring elevated privileges (bypassing RLS)
-const supabaseAdmin = createClient(supabaseUrl || '', supabaseServiceKey || supabaseKey || '');
+// Admin client
+const supabaseAdmin = createClient(
+  supabaseUrl || '',
+  supabaseServiceKey || supabaseKey || '',
+  {
+    auth: {
+      persistSession: false
+    },
+    realtime: {
+      transport: WebSocket
+    }
+  }
+);
 
 module.exports = { supabase, supabaseAdmin };

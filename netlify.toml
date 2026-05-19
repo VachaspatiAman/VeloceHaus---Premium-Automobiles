@@ -12,7 +12,7 @@
   package = "@netlify/plugin-nextjs"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "22"
   NPM_VERSION  = "9"
 
 # ─── Netlify Functions ──────────────────────────────────────
