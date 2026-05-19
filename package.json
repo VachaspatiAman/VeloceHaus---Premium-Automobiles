@@ -1,7 +1,7 @@
 {
   "name": "veloce-ecommerce",
   "version": "1.0.0",
-  "description": "Veloce Automobile E-Commerce – monorepo root package",
+  "description": "VeloceHaus Automobile E-Commerce – monorepo root package",
   "private": true,
   "scripts": {
     "dev:frontend":  "cd frontend && npm run dev",

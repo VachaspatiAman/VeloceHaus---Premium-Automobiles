@@ -1,5 +1,5 @@
 /**
- * Veloce – Netlify Serverless Function (api.js)
+ * VeloceHaus – Netlify Serverless Function (api.js)
  * -----------------------------------------------
  * Wraps the entire Express backend with `serverless-http` so every
  * existing route/controller/middleware works without modification.
@@ -83,7 +83,7 @@ app.use('/api/ai',       aiRoutes);
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status:  'success',
-    message: 'Veloce API is live ✅',
+    message: 'VeloceHaus API is live ✅',
     env:     process.env.NODE_ENV || 'production',
     ts:      new Date().toISOString(),
   });

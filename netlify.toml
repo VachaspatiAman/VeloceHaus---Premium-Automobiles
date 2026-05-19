@@ -1,11 +1,11 @@
 # ============================================================
-#  Veloce – Netlify Configuration
+#  VeloceHaus – Netlify Configuration
 # ============================================================
 
 [build]
   # Source of the frontend (Next.js)
   base    = "frontend"
-  command = "npm run build"
+  command = "npm install --prefix ../ && npm run build"
   publish = ".next"
 
 [build.environment]

@@ -1,4 +1,4 @@
-# 🚀 Veloce – Full-Stack Netlify Deployment Guide
+# 🚀 VeloceHaus – Full-Stack Netlify Deployment Guide
 
 > **Stack**: Next.js 14 (frontend) + Express.js (backend, via Netlify Functions) + Supabase
 
@@ -213,7 +213,7 @@ npm run deploy:preview  # preview deploy (get a test URL)
 | `NODE_ENV` | `production` | All |
 | `NEXT_PUBLIC_API_URL` | `/.netlify/functions/api` | All |
 | `NEXT_PUBLIC_APP_URL` | `https://your-site.netlify.app` | All |
-| `NEXT_PUBLIC_APP_NAME` | `Veloce` | All |
+| `NEXT_PUBLIC_APP_NAME` | `VeloceHaus` | All |
 
 > ⚠️ **Important**: Variables prefixed with `NEXT_PUBLIC_` are bundled into the client-side JS bundle. Never put secrets in `NEXT_PUBLIC_` variables.
 
@@ -319,4 +319,4 @@ netlify dev
 
 ---
 
-*Generated for Veloce Automobile E-Commerce Platform*
+*Generated for VeloceHaus Automobile E-Commerce Platform*
