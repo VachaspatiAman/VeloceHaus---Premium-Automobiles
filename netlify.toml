@@ -4,8 +4,7 @@
 
 [build]
   # Source of the frontend (Next.js)
-  base    = "frontend"
-  command = "npm install --prefix ../ && npm run build"
+  command = "npm run build"
   publish = ".next"
 
 [[plugins]]
