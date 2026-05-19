@@ -1,5 +1,5 @@
 /**
- * Veloce API Service
+ * VeloceHaus API Service
  * ------------------
  * Centralised HTTP utility for all frontend → backend communication.
  *

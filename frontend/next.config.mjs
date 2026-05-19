@@ -3,7 +3,7 @@ const nextConfig = {
   // Expose env vars to the browser (prefix must be NEXT_PUBLIC_)
   env: {
     NEXT_PUBLIC_API_URL:  process.env.NEXT_PUBLIC_API_URL  || '/.netlify/functions/api',
-    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Veloce',
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'VeloceHaus',
     NEXT_PUBLIC_APP_URL:  process.env.NEXT_PUBLIC_APP_URL  || '',
   },
 

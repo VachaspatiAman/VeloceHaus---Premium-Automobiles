@@ -34,8 +34,9 @@ export interface VehicleCardProps {
   horsepower?:      number;
   torque?:          string;
   mileage?:         string;
+  range?:           string;
   seats?:           number;
-  top_speed?:       number;
+  top_speed?:       number | string;
   warranty?:        string;
   // Images
   image:            string;
@@ -70,7 +71,7 @@ const TRANS_SHORT: Record<string, string> = {
 export default function VehicleCard({
   id, name, brand, type, fuel, fueltype,
   price, rating = 4.5, reviews,
-  engine, transmission, horsepower, mileage, seats, top_speed, warranty,
+  engine, transmission, horsepower, mileage, range, seats, top_speed, warranty,
   image, color_variants,
   tag, tagGradient = "from-cyan-500 to-blue-600",
   aiScore, onView, onWishlist, onCart,
@@ -97,8 +98,9 @@ export default function VehicleCard({
     transmission  && { Icon: Zap,      val: TRANS_SHORT[transmission] ?? transmission, sub: "Trans" },
     horsepower    && { Icon: Gauge,    val: `${horsepower} bhp`, sub: "Power" },
     mileage       && { Icon: Fuel,     val: mileage, sub: "Mileage" },
+    range         && { Icon: Zap,      val: range, sub: "Range" },
     seats         && { Icon: Users,    val: `${seats} Seats`, sub: "Capacity" },
-    top_speed     && { Icon: Gauge,    val: `${top_speed} km/h`, sub: "Top Speed" },
+    top_speed     && { Icon: Gauge,    val: String(top_speed).includes('km/h') ? String(top_speed) : `${top_speed} km/h`, sub: "Top Speed" },
   ].filter(Boolean) as { Icon: React.ElementType; val: string; sub: string }[];
 
   /* ── Compact variant ────────────────────────────────────────── */
