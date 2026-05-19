@@ -6,6 +6,7 @@
   # Source of the frontend (Next.js)
   base    = "frontend"
   command = "npm install --prefix ../ && npm run build"
+  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
