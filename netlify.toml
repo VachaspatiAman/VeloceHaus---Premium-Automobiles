@@ -4,6 +4,7 @@
 
 [build]
   # Source of the frontend (Next.js)
+  base    = "frontend"
   command = "npm run build"
   publish = ".next"
 
@@ -16,29 +17,17 @@
 
 # ─── Netlify Functions ──────────────────────────────────────
 [functions]
-  # Functions live one level above the frontend
-  directory         = "../netlify/functions"
+  # Functions live inside the frontend folder now
+  directory         = "netlify/functions"
   node_bundler      = "esbuild"
-  # Give each function a generous timeout (max 26 s on free tier)
-  included_files    = ["../netlify/functions/**"]
-
-# ─── Dev (netlify dev) ──────────────────────────────────────
-[dev]
-  command   = "npm run dev"
-  port      = 3000
-  targetPort = 3000
-  framework = "next"
+  included_files    = ["netlify/functions/**"]
 
 # ─── Redirects & Rewrites ───────────────────────────────────
 
-# 1. Proxy every /.netlify/functions/ call → Netlify Functions (already handled by Netlify)
-#    This block is kept for explicitness / local dev with netlify-cli.
 [[redirects]]
   from   = "/api/*"
   to     = "/.netlify/functions/api/:splat"
   status = 200
-
-# (Next.js plugin handles routing automatically)
 
 # ─── Headers ────────────────────────────────────────────────
 [[headers]]
