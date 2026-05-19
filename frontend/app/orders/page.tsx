@@ -78,7 +78,7 @@ export default function OrdersPage() {
           <div className="text-center py-20 bg-white/[0.02] border border-white/[0.06] rounded-2xl">
             <Package size={48} className="text-slate-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">No orders found</h2>
-            <p className="text-slate-400 mb-6">You haven't placed any orders yet.</p>
+            <p className="text-slate-400 mb-6">You haven&apos;t placed any orders yet.</p>
             <Link href="/vehicles" className="inline-block px-6 py-3 bg-cyan-500 text-white font-semibold rounded-xl hover:bg-cyan-600 transition-colors">
               Browse Vehicles
             </Link>

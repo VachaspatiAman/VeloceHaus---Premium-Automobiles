@@ -103,7 +103,7 @@ export default function ContactPage() {
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-white/[0.04] border border-white/[0.08] text-cyan-400 text-xs font-bold">
               <Mail size={13} />
-              We'd love to hear from you
+              We&apos;d love to hear from you
             </div>
             <h1 className="font-display font-black text-4xl sm:text-6xl text-white mb-4 leading-tight">
               Get in{" "}
@@ -112,7 +112,7 @@ export default function ContactPage() {
               </span>
             </h1>
             <p className="text-slate-500 text-sm sm:text-base max-w-md mx-auto">
-              Have a question, partnership idea, or need help choosing your perfect vehicle? We're here for you.
+              Have a question, partnership idea, or need help choosing your perfect vehicle? We&apos;re here for you.
             </p>
           </motion.div>
         </div>

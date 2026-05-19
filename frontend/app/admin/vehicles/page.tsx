@@ -383,7 +383,7 @@ export default function AdminVehicles() {
                       <div className="flex flex-col items-center justify-center py-12 text-gray-600 border border-dashed border-gray-700 rounded-2xl">
                         <Palette className="w-10 h-10 mb-3 opacity-40" />
                         <p className="text-sm">No color variants added yet.</p>
-                        <p className="text-xs mt-1">Click "Add Color" to add the first variant.</p>
+                        <p className="text-xs mt-1">Click &quot;Add Color&quot; to add the first variant.</p>
                       </div>
                     )}
 
