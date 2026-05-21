@@ -22,6 +22,7 @@
   directory         = "netlify/functions"
   node_bundler      = "esbuild"
   included_files    = ["netlify/functions/**"]
+  external_node_modules = ["mysql2"]
 
 # ─── Redirects & Rewrites ───────────────────────────────────
 
