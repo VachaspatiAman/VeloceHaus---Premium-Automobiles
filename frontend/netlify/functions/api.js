@@ -28,9 +28,7 @@ const app = express();
 
 // Fix Netlify path prefix
 app.use((req, res, next) => {
-  if (req.url.startsWith('/.netlify/functions/api')) {
-    req.url = req.url.replace('/.netlify/functions/api', '');
-  }
+  req.url = req.url.replace(/^\/\.netlify\/functions\/api/, '');
   next();
 });
 
@@ -81,16 +79,16 @@ app.use(express.urlencoded({
 }));
 
 // ── Routes ────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
-app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/auth', authRoutes);
+app.use('/vehicles', vehicleRoutes);
+app.use('/admin', adminRoutes);
+app.use('/wishlist', wishlistRoutes);
+app.use('/cart', cartRoutes);
+app.use('/orders', orderRoutes);
+app.use('/ai', aiRoutes);
 
 // ── Health Check ──────────────────────────────────────────
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'VeloceHaus API is live ✅',

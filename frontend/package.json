@@ -36,5 +36,8 @@
     "typescript": "^5.9.3",
     "uuid": "^14.0.0",
     "ws": "^8.20.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

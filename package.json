@@ -5,11 +5,11 @@
   "private": true,
   "scripts": {
     "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend  && npm run dev",
+    "dev:backend": "cd frontend/backend && npm run dev",
     "dev": "netlify dev",
     "build": "cd frontend && npm run build",
     "build:check": "cd frontend && npm run build && echo '✅ Build successful'",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "install:all": "npm install && cd frontend && npm install && cd backend && npm install",
     "deploy": "netlify deploy --prod",
     "deploy:preview": "netlify deploy",
     "lint": "cd frontend && npm run lint"
