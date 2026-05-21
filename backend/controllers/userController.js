@@ -1,22 +1,15 @@
-const { supabaseAdmin } = require('../config/supabase');
+const db = require('../config/db');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const { data: users, error } = await supabaseAdmin
-    .from('users')
-    .select(`
-      *,
-      orders (
-        id,
-        status,
-        total_amount,
-        created_at
-      )
-    `)
-    .order('created_at', { ascending: false });
+  const users = await db.query('SELECT * FROM users ORDER BY created_at DESC');
+  const orders = await db.query('SELECT id, user_id, status, total_amount, created_at FROM orders');
 
-  if (error) return next(new AppError(error.message, 400));
+  users.forEach(u => {
+    u.password = undefined;
+    u.orders = orders.filter(o => o.user_id === u.id);
+  });
 
   res.status(200).json({
     status: 'success',
@@ -25,27 +18,50 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserById = catchAsync(async (req, res, next) => {
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .select(`
-      *,
-      orders (
-        *,
-        order_items (
-          *,
-          vehicles (
-            id,
-            name,
-            price,
-            image_url
-          )
-        )
-      )
-    `)
-    .eq('id', req.params.id)
-    .single();
+  const users = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
 
-  if (error) return next(new AppError(error.message, 404));
+  if (!users || users.length === 0) {
+    return next(new AppError('No user found with that ID', 404));
+  }
+
+  const user = users[0];
+  user.password = undefined;
+
+  const orders = await db.query('SELECT * FROM orders WHERE user_id = ?', [req.params.id]);
+
+  if (orders.length > 0) {
+    const orderIds = orders.map(o => o.id);
+    // Dynamic placeholder list for IN clause
+    const placeholders = orderIds.map(() => '?').join(',');
+    const orderItems = await db.query(
+      `SELECT oi.*, v.name, v.price AS vehicle_price, v.image_url 
+       FROM order_items oi 
+       LEFT JOIN vehicles v ON oi.vehicle_id = v.id 
+       WHERE oi.order_id IN (${placeholders})`,
+      orderIds
+    );
+
+    orders.forEach(o => {
+      o.order_items = orderItems
+        .filter(item => item.order_id === o.id)
+        .map(item => ({
+          id: item.id,
+          order_id: item.order_id,
+          vehicle_id: item.vehicle_id,
+          quantity: item.quantity,
+          price: item.price,
+          created_at: item.created_at,
+          vehicles: item.vehicle_id ? {
+            id: item.vehicle_id,
+            name: item.name,
+            price: item.vehicle_price,
+            image_url: item.image_url
+          } : null
+        }));
+    });
+  }
+
+  user.orders = orders;
 
   res.status(200).json({
     status: 'success',
@@ -56,14 +72,19 @@ exports.getUserById = catchAsync(async (req, res, next) => {
 exports.updateUser = catchAsync(async (req, res, next) => {
   const { full_name, phone, role } = req.body;
 
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .update({ full_name, phone, role })
-    .eq('id', req.params.id)
-    .select()
-    .single();
+  await db.query(
+    'UPDATE users SET full_name = ?, phone = ?, role = ? WHERE id = ?',
+    [full_name, phone, role, req.params.id]
+  );
 
-  if (error) return next(new AppError(error.message, 400));
+  const users = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
+
+  if (!users || users.length === 0) {
+    return next(new AppError('No user found with that ID', 404));
+  }
+
+  const user = users[0];
+  user.password = undefined;
 
   res.status(200).json({
     status: 'success',
@@ -73,22 +94,18 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
   // First check if user has orders
-  const { data: orders } = await supabaseAdmin
-    .from('orders')
-    .select('id')
-    .eq('user_id', req.params.id);
+  const orders = await db.query('SELECT id FROM orders WHERE user_id = ?', [req.params.id]);
 
   if (orders && orders.length > 0) {
     return next(new AppError('Cannot delete user with existing orders', 400));
   }
 
   // Delete the user
-  const { error } = await supabaseAdmin
-    .from('users')
-    .delete()
-    .eq('id', req.params.id);
+  const result = await db.query('DELETE FROM users WHERE id = ?', [req.params.id]);
 
-  if (error) return next(new AppError(error.message, 400));
+  if (result.affectedRows === 0) {
+    return next(new AppError('No user found with that ID', 404));
+  }
 
   res.status(204).json({
     status: 'success',
@@ -105,14 +122,16 @@ exports.assignRole = catchAsync(async (req, res, next) => {
     return next(new AppError("Role must be 'user', 'admin', or 'superadmin'.", 400));
   }
 
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .update({ role })
-    .eq('id', req.params.id)
-    .select()
-    .single();
+  await db.query('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
 
-  if (error) return next(new AppError(error.message, 400));
+  const users = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
+
+  if (!users || users.length === 0) {
+    return next(new AppError('No user found with that ID', 404));
+  }
+
+  const user = users[0];
+  user.password = undefined;
 
   res.status(200).json({
     status: 'success',

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
-const { supabaseAdmin } = require('../config/supabase');
+const db = require('../config/db');
 
 const verifyUser = catchAsync(async (req, res, next) => {
   let token;
@@ -14,20 +14,20 @@ const verifyUser = catchAsync(async (req, res, next) => {
     return next(new AppError('You are not logged in! Please log in to get access.', 401));
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .select('*')
-    .eq('id', decoded.id)
-    .single();
+    const users = await db.query('SELECT * FROM users WHERE id = ?', [decoded.id]);
 
-  if (error || !user) {
-    return next(new AppError('The user belonging to this token does no longer exist.', 401));
+    if (!users || users.length === 0) {
+      return next(new AppError('The user belonging to this token does no longer exist.', 401));
+    }
+
+    req.user = users[0];
+    next();
+  } catch (err) {
+    return next(new AppError('Invalid token. Please log in again.', 401));
   }
-
-  req.user = user;
-  next();
 });
 
 const verifyAdmin = catchAsync(async (req, res, next) => {

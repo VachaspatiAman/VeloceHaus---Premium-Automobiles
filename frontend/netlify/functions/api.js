@@ -38,6 +38,14 @@ const aiRoutes = require('../../../backend/routes/aiRoutes');
 // ── Express app ───────────────────────────────────────────
 const app = express();
 
+// Strip Netlify path prefix if present (enables routing compatibility for both local dev and production)
+app.use((req, res, next) => {
+  if (req.url.startsWith('/.netlify/functions/api')) {
+    req.url = req.url.replace('/.netlify/functions/api', '');
+  }
+  next();
+});
+
 /* ── CORS ─────────────────────────────────────────────────
    Allow the Netlify domain, localhost, and any /.netlify/* origin.
    In production, lock CORS_ORIGIN to your actual Netlify URL.      */
@@ -64,8 +72,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
-// Handle preflight globally
-app.options('*', cors());
+// CORS preflight is handled automatically by the top-level cors() middleware
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

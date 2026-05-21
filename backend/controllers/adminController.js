@@ -1,4 +1,7 @@
-const { supabaseAdmin } = require('../config/supabase');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const db = require('../config/db');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const multer = require('multer');
@@ -8,18 +11,32 @@ exports.uploadMiddleware = multer({ storage }).single('image');
 
 const extractVehicleFields = (body) => {
   const {
-    name, brand, type, fueltype, price, stock, featured, description, image_url,
+    name, brand, type, fueltype, fuelType, price, stock, featured, description, image_url,
     // Specs
     engine, transmission, horsepower, torque, mileage, seats, top_speed, warranty,
-    // Color variants (array of { color_name, hex_code, image_url })
+    // Color variants
     color_variants
   } = body;
 
+  let parsedColorVariants = null;
+  if (color_variants) {
+    if (Array.isArray(color_variants)) {
+      parsedColorVariants = color_variants;
+    } else if (typeof color_variants === 'string') {
+      try {
+        parsedColorVariants = JSON.parse(color_variants);
+      } catch (e) {
+        parsedColorVariants = null;
+      }
+    }
+  }
+
   return {
-    name, brand, type, fueltype,
+    name, brand, type,
+    fuelType: fuelType || fueltype,
     price: price !== undefined ? Number(price) : undefined,
     stock: stock !== undefined ? Number(stock) : undefined,
-    featured: featured !== undefined ? Boolean(featured) : undefined,
+    featured: featured !== undefined ? (featured === 'true' || featured === true || featured === 1 || featured === '1' ? 1 : 0) : undefined,
     description, image_url,
     engine, transmission,
     horsepower: horsepower ? Number(horsepower) : null,
@@ -27,48 +44,72 @@ const extractVehicleFields = (body) => {
     seats: seats ? Number(seats) : null,
     top_speed: top_speed ? Number(top_speed) : null,
     warranty,
-    color_variants: Array.isArray(color_variants) ? color_variants : null
+    color_variants: parsedColorVariants
   };
 };
 
 exports.addVehicle = catchAsync(async (req, res, next) => {
   const fields = extractVehicleFields(req.body);
+  const id = crypto.randomUUID();
 
-  const { data: vehicle, error } = await supabaseAdmin
-    .from('vehicles')
-    .insert([fields])
-    .select()
-    .single();
+  const colorVariantsStr = fields.color_variants ? JSON.stringify(fields.color_variants) : null;
 
-  if (error) return next(new AppError(error.message, 400));
+  await db.query(
+    `INSERT INTO vehicles (
+      id, name, brand, type, fuelType, price, stock, image_url, featured, description, 
+      engine, transmission, horsepower, torque, mileage, seats, top_speed, warranty, color_variants
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id, fields.name, fields.brand, fields.type, fields.fuelType, fields.price, fields.stock, fields.image_url, fields.featured, fields.description,
+      fields.engine, fields.transmission, fields.horsepower, fields.torque, fields.mileage, fields.seats, fields.top_speed, fields.warranty, colorVariantsStr
+    ]
+  );
+
+  const vehicles = await db.query('SELECT * FROM vehicles WHERE id = ?', [id]);
+  const vehicle = vehicles[0];
+  if (vehicle && vehicle.color_variants && typeof vehicle.color_variants === 'string') {
+    vehicle.color_variants = JSON.parse(vehicle.color_variants);
+  }
 
   res.status(201).json({ status: 'success', data: { vehicle } });
 });
 
 exports.updateVehicle = catchAsync(async (req, res, next) => {
   const fields = extractVehicleFields(req.body);
-  // Remove undefined keys so we don't overwrite untouched fields with null
+  // Remove undefined keys so we don't overwrite untouched fields
   Object.keys(fields).forEach(k => fields[k] === undefined && delete fields[k]);
 
-  const { data: vehicle, error } = await supabaseAdmin
-    .from('vehicles')
-    .update(fields)
-    .eq('id', req.params.id)
-    .select()
-    .single();
+  if (Object.keys(fields).length === 0) {
+    return next(new AppError('Please provide fields to update', 400));
+  }
 
-  if (error) return next(new AppError(error.message, 400));
+  const id = req.params.id;
+  const keys = Object.keys(fields);
+  const setClause = keys.map(k => `\`${k}\` = ?`).join(', ');
+  const values = keys.map(k => k === 'color_variants' ? (fields[k] ? JSON.stringify(fields[k]) : null) : fields[k]);
+  values.push(id);
+
+  const result = await db.query(`UPDATE vehicles SET ${setClause} WHERE id = ?`, values);
+
+  if (result.affectedRows === 0) {
+    return next(new AppError('No vehicle found with that ID', 404));
+  }
+
+  const vehicles = await db.query('SELECT * FROM vehicles WHERE id = ?', [id]);
+  const vehicle = vehicles[0];
+  if (vehicle && vehicle.color_variants && typeof vehicle.color_variants === 'string') {
+    vehicle.color_variants = JSON.parse(vehicle.color_variants);
+  }
 
   res.status(200).json({ status: 'success', data: { vehicle } });
 });
 
 exports.deleteVehicle = catchAsync(async (req, res, next) => {
-  const { error } = await supabaseAdmin
-    .from('vehicles')
-    .delete()
-    .eq('id', req.params.id);
+  const result = await db.query('DELETE FROM vehicles WHERE id = ?', [req.params.id]);
 
-  if (error) return next(new AppError(error.message, 400));
+  if (result.affectedRows === 0) {
+    return next(new AppError('No vehicle found with that ID', 404));
+  }
 
   res.status(204).json({
     status: 'success',
@@ -79,55 +120,47 @@ exports.deleteVehicle = catchAsync(async (req, res, next) => {
 exports.uploadImage = catchAsync(async (req, res, next) => {
   if (!req.file) return next(new AppError('Please upload an image.', 400));
 
+  const uploadsDir = path.join(__dirname, '../public/uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
   const fileExt = req.file.originalname.split('.').pop();
-  const fileName = `${Math.random()}.${fileExt}`;
-  const filePath = `vehicles/${fileName}`;
+  const fileName = `${crypto.randomUUID()}.${fileExt}`;
+  const filePath = path.join(uploadsDir, fileName);
 
-  const { data, error } = await supabaseAdmin.storage
-    .from('vehicle-images')
-    .upload(filePath, req.file.buffer, {
-      contentType: req.file.mimetype
-    });
+  fs.writeFileSync(filePath, req.file.buffer);
 
-  if (error) return next(new AppError(error.message, 400));
-
-  const { data: publicUrlData } = supabaseAdmin.storage
-    .from('vehicle-images')
-    .getPublicUrl(filePath);
+  // Formulate public serving URL
+  const host = req.get('host');
+  const protocol = req.protocol;
+  const publicUrl = `${protocol}://${host}/uploads/${fileName}`;
 
   res.status(200).json({
     status: 'success',
     data: {
-      url: publicUrlData.publicUrl
+      url: publicUrl
     }
   });
 });
 
 exports.getDashboardStats = catchAsync(async (req, res, next) => {
-  const { count: usersCount, error: userErr } = await supabaseAdmin
-    .from('users')
-    .select('*', { count: 'exact', head: true });
+  const usersCountResult = await db.query('SELECT COUNT(*) as count FROM users');
+  const vehiclesCountResult = await db.query('SELECT COUNT(*) as count FROM vehicles');
+  const ordersCountResult = await db.query('SELECT COUNT(*) as count FROM orders');
+  const revenueResult = await db.query("SELECT SUM(total_amount) as revenue FROM orders WHERE status != 'cancelled'");
 
-  const { count: vehiclesCount, error: vehicleErr } = await supabaseAdmin
-    .from('vehicles')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: ordersCount, error: orderErr } = await supabaseAdmin
-    .from('orders')
-    .select('*', { count: 'exact', head: true });
-
-  const revenue = 1500000; // Mocked logic, could sum from orders table
-
-  if (userErr || vehicleErr || orderErr) {
-    return next(new AppError('Error fetching dashboard stats', 500));
-  }
+  const totalUsers = usersCountResult[0]?.count || 0;
+  const totalVehicles = vehiclesCountResult[0]?.count || 0;
+  const orders = ordersCountResult[0]?.count || 0;
+  const revenue = Number(revenueResult[0]?.revenue || 0);
 
   res.status(200).json({
     status: 'success',
     data: {
-      totalUsers: usersCount || 0,
-      totalVehicles: vehiclesCount || 0,
-      orders: ordersCount || 0,
+      totalUsers,
+      totalVehicles,
+      orders,
       revenue
     }
   });

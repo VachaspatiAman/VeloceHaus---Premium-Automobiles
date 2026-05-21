@@ -1,4 +1,4 @@
-const { supabase } = require('../config/supabase');
+const db = require('../config/db');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 
@@ -16,7 +16,7 @@ exports.aiChat = catchAsync(async (req, res, next) => {
 
   const match = queryLower.match(/under (\d+) lakh/);
   if (match) {
-    maxPrice = parseInt(match[1]) * 100000;
+    maxPrice = parseInt(match[1], 10) * 100000;
   }
 
   if (queryLower.includes('sports') || queryLower.includes('car')) {
@@ -25,65 +25,89 @@ exports.aiChat = catchAsync(async (req, res, next) => {
     vehicleType = 'bike';
   }
 
-  let dbQuery = supabase.from('vehicles').select('*');
+  let sql = 'SELECT * FROM vehicles WHERE 1=1';
+  const params = [];
   
   if (maxPrice) {
-    dbQuery = dbQuery.lte('price', maxPrice);
+    sql += ' AND price <= ?';
+    params.push(maxPrice);
   }
   if (vehicleType) {
-    dbQuery = dbQuery.eq('type', vehicleType);
+    sql += ' AND type = ?';
+    params.push(vehicleType);
   }
 
-  const { data: vehicles, error } = await dbQuery.limit(5);
+  sql += ' LIMIT 5';
 
-  if (error) return next(new AppError(error.message, 400));
+  const vehicles = await db.query(sql, params);
+
+  const formattedVehicles = vehicles.map(v => {
+    if (v.color_variants && typeof v.color_variants === 'string') {
+      try {
+        v.color_variants = JSON.parse(v.color_variants);
+      } catch (e) {
+        v.color_variants = [];
+      }
+    }
+    return v;
+  });
 
   res.status(200).json({
     status: 'success',
     message: `Here are some recommendations based on your query: "${query}"`,
-    results: vehicles?.length || 0,
-    data: { vehicles }
+    results: formattedVehicles.length,
+    data: { vehicles: formattedVehicles }
   });
 });
 
 exports.getPersonalizedRecommendations = catchAsync(async (req, res, next) => {
-  const { data: vehicles, error } = await supabase
-    .from('vehicles')
-    .select('*')
-    .limit(4);
+  const vehicles = await db.query('SELECT * FROM vehicles LIMIT 4');
 
-  if (error) return next(new AppError(error.message, 400));
+  const formattedVehicles = vehicles.map(v => {
+    if (v.color_variants && typeof v.color_variants === 'string') {
+      try {
+        v.color_variants = JSON.parse(v.color_variants);
+      } catch (e) {
+        v.color_variants = [];
+      }
+    }
+    return v;
+  });
 
   res.status(200).json({
     status: 'success',
-    data: { vehicles }
+    data: { vehicles: formattedVehicles }
   });
 });
 
 exports.getSimilarVehicles = catchAsync(async (req, res, next) => {
   const { vehicleId } = req.params;
 
-  const { data: vehicle } = await supabase
-    .from('vehicles')
-    .select('type, brand')
-    .eq('id', vehicleId)
-    .single();
+  const vehicles = await db.query('SELECT type, brand FROM vehicles WHERE id = ?', [vehicleId]);
+  const vehicle = vehicles[0];
 
   if (!vehicle) {
     return next(new AppError('Vehicle not found', 404));
   }
 
-  const { data: vehicles, error } = await supabase
-    .from('vehicles')
-    .select('*')
-    .eq('type', vehicle.type)
-    .neq('id', vehicleId)
-    .limit(4);
+  const similar = await db.query(
+    'SELECT * FROM vehicles WHERE type = ? AND id != ? LIMIT 4',
+    [vehicle.type, vehicleId]
+  );
 
-  if (error) return next(new AppError(error.message, 400));
+  const formattedSimilar = similar.map(v => {
+    if (v.color_variants && typeof v.color_variants === 'string') {
+      try {
+        v.color_variants = JSON.parse(v.color_variants);
+      } catch (e) {
+        v.color_variants = [];
+      }
+    }
+    return v;
+  });
 
   res.status(200).json({
     status: 'success',
-    data: { vehicles }
+    data: { vehicles: formattedSimilar }
   });
 });

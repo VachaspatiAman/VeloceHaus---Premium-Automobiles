@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { supabaseAdmin } = require('../config/supabase');
+const crypto = require('crypto');
+const db = require('../config/db');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 
@@ -27,32 +28,37 @@ const createSendToken = (user, statusCode, res) => {
 exports.signup = catchAsync(async (req, res, next) => {
   const { full_name, name, email, password, phone, role } = req.body;
 
+  if (!email || !password) {
+    return next(new AppError('Please provide email and password!', 400));
+  }
+
+  // Check if email already exists
+  const existingUsers = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+  if (existingUsers && existingUsers.length > 0) {
+    return next(new AppError('Email address is already in use!', 400));
+  }
+
   // Hash password
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
   // Assign user role, but prevent regular users from creating admins
   const userRole = role === 'admin' ? 'user' : (role || 'user'); 
+  const id = crypto.randomUUID();
 
-  const { data: newUser, error } = await supabaseAdmin
-    .from('users')
-    .insert([
-      { 
-        full_name: full_name || name, 
-        email, 
-        password: hashedPassword, 
-        phone,
-        role: userRole 
-      }
-    ])
-    .select()
-    .single();
+  // Insert into MySQL
+  await db.query(
+    'INSERT INTO users (id, full_name, email, password, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
+    [id, full_name || name, email, hashedPassword, phone || null, userRole]
+  );
 
-  if (error) {
-    return next(new AppError(error.message, 400));
+  // Retrieve new user
+  const newUsers = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  if (!newUsers || newUsers.length === 0) {
+    return next(new AppError('Failed to create user. Please try again.', 500));
   }
 
-  createSendToken(newUser, 201, res);
+  createSendToken(newUsers[0], 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -62,13 +68,10 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Please provide email and password!', 400));
   }
 
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .single();
+  const users = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+  const user = users[0];
 
-  if (error || !user || !(await bcrypt.compare(password, user.password))) {
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
 
@@ -78,6 +81,6 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.googleOAuth = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
-    message: 'For Google OAuth, please use Supabase Auth directly on the frontend and send the resulting token to backend.'
+    message: 'For Google OAuth, please use JWT credentials or login locally.'
   });
 });
