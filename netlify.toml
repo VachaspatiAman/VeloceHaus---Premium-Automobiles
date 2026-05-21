@@ -19,7 +19,15 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
   included_files = ["netlify/functions/**"]
-  external_node_modules = ["mysql2"]
+  external_node_modules = [ 
+    "express",
+    "mysql2",
+    "jsonwebtoken",
+    "bcryptjs",
+    "cors",
+    "dotenv",
+    "uuid"
+  ]
 
 [[redirects]]
   from = "/api/*"
